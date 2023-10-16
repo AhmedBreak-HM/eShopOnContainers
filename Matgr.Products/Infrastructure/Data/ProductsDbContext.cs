@@ -1,15 +1,16 @@
-﻿using Matgr.Products.Configurations;
-using Matgr.Products.Models;
+﻿using Common.Core.Entities;
 using Microsoft.EntityFrameworkCore;
+using Matgr.Products.Infrastructure.Data.Configurations;
+using Matgr.Products.Core.Entities;
 
-namespace Matgr.Products.Data
+namespace Matgr.Products.Infrastructure.Data
 {
-    public class ProductsDbContext:DbContext
+    public class ProductsDbContext : DbContext
     {
         public ProductsDbContext(DbContextOptions<ProductsDbContext> options)
                                                                    : base(options) { }
 
-        public DbSet<Product>  Products { get; set; }
+        public DbSet<Product> Products { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

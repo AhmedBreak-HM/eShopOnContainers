@@ -1,9 +1,9 @@
-﻿using Matgr.Products.Models;
+﻿using Matgr.Products.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.ComponentModel.DataAnnotations;
 
-namespace Matgr.Products.Configurations
+namespace Matgr.Products.Infrastructure.Data.Configurations
 {
     public class ProductConfiguration : IEntityTypeConfiguration<Product>
     {

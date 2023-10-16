@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web Apps", "Web Apps", "{F43DCE61-CE34-4034-840D-61ECC07B8573}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{F43DCE61-CE34-4034-840D-61ECC07B8573}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Geteways", "Geteways", "{115FD9BE-E03C-4175-8DB6-DDEA1D09C481}"
 EndProject
@@ -24,6 +24,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{B378E57D-B892-4667-96EC-E592ED924A9E}"
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "Matgr.UI", "Matgr.UI\Matgr.UI.esproj", "{5EC6C979-F8AD-4942-A124-C6C5189D2942}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PostmanCollection", "PostmanCollection", "{A2214CF7-5893-460B-9E78-B92B9A842DBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

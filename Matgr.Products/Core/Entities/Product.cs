@@ -1,8 +1,8 @@
-﻿using Common;
+﻿using Common.Core.Entities.Base;
 
-namespace Matgr.Products.Models
+namespace Matgr.Products.Core.Entities
 {
-    public class Product : BaseEntity<int, string>
+    public class Product : EntityBase<int, string>
     {
         public double Price { get; set; }
 

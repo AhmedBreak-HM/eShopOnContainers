@@ -1,4 +1,4 @@
-using Matgr.Products.Data;
+using Matgr.Products.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Matgr.Products

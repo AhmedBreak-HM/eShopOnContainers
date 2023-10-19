@@ -34,9 +34,12 @@ namespace Common.Infrastructure.Repositories
             return await _dbContext.Set<T>().ToListAsync(cancellationToken);
         }
 
-        public async Task<T> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
+        public async Task<T> GetByIdAsync(TId id)
         {
-            return await _dbContext.FindAsync<T>(id, cancellationToken) ?? throw new Exception();
+
+            var entity =  await _dbContext.FindAsync<T>(id);
+            if (entity == null) return null;
+            return entity;
         }
 
         public async Task<T> UpdateAsync(T entity, CancellationToken cancellationToken = default)

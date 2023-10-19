@@ -8,7 +8,7 @@ namespace Matgr.Products.Core.Entities
 
         public string? Description { get; set; }
 
-        public string? CatogryName { get; set; }
+        public string? CategoryName { get; set; }
 
         public string? ImageUrl { get; set; }
     }

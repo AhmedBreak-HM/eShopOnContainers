@@ -15,8 +15,8 @@ public class InputModel
     public string Password { get; set; }
         
     public bool RememberLogin { get; set; }
-
-    public string? ReturnUrl { get; set; } = null;
+        
+    public string? ReturnUrl { get; set; } = null;  
 
     public string Button { get; set; }
 }

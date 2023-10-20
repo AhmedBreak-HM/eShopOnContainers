@@ -38,7 +38,6 @@ namespace Matgr.Identity
                 options.Events.RaiseSuccessEvents = true;
                 options.EmitStaticAudienceClaim = true;
             })
-                .AddTestUsers(TestUsers.Users)
                 .AddInMemoryIdentityResources(SD.IdentityResources)
                 .AddInMemoryApiScopes(SD.ApiScopes)
                 .AddInMemoryClients(SD.Clients)
@@ -60,16 +59,17 @@ namespace Matgr.Identity
             app.UseStaticFiles();
 
             app.UseRouting();
+
             app.UseIdentityServer();
 
             app.UseAuthorization();
 
-            using var scope = app.Services.CreateScope();
-            {
-                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-                DbInitializer.Initialize(userManager, roleManager);
-            }
+            //using var scope = app.Services.CreateScope();
+            //{
+            //    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            //    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            //    DbInitializer.Initialize(userManager, roleManager);
+            //}
 
             app.MapRazorPages();
 

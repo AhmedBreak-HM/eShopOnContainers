@@ -364,3 +364,7 @@ FodyWeavers.xsd
 
 # Migrations
 Migrations
+/Matgr.Identity/Migrations/20231020024514_DbInit.cs
+/Matgr.Identity/Migrations/IdentityServerDbContextModelSnapshot.cs
+/Matgr.Identity/Migrations/20231020024514_DbInit.cs
+/Matgr.Identity/Migrations/IdentityServerDbContextModelSnapshot.cs

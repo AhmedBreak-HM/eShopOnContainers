@@ -64,6 +64,13 @@ namespace Matgr.Identity
 
             app.UseAuthorization();
 
+            using var scope = app.Services.CreateScope();
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                DbInitializer.Initialize(userManager, roleManager);
+            }
+
             app.MapRazorPages();
 
             app.Run();

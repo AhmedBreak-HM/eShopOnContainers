@@ -27,7 +27,7 @@ namespace Matgr.Products
             builder.Services.AddAuthentication("Bearer")
                     .AddJwtBearer("Bearer", opt =>
                     {
-                        opt.Authority = "https://localhost:7146/";
+                        opt.Authority = builder.Configuration["APIUrls:IdentityServer"];
                         opt.TokenValidationParameters = new TokenValidationParameters
                         {
                             ValidateAudience = false

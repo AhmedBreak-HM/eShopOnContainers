@@ -1,9 +1,14 @@
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Services;
 using Identity_Demo;
 using Matgr.Identity.Data;
 using Matgr.Identity.Entities;
+using Matgr.Identity.IdentityConfig;
+using Matgr.Identity.Services;
 using Matgr.Identity.Utilits;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Matgr.Identity
 {
@@ -16,6 +21,9 @@ namespace Matgr.Identity
             // Add services to the container.
             builder.Services.AddRazorPages();
 
+            builder.Services.AddTransient<IProfileService, CustomProfileService>();
+
+
             // Add DbContext
             var connectionString = builder.Configuration.GetConnectionString("IdentityServerDbConnection");
             builder.Services.AddDbContext<IdentityServerDbContext>(x =>
@@ -23,27 +31,54 @@ namespace Matgr.Identity
                 x.UseSqlServer(connectionString);
 
             });
-
             // Add identity 
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                             .AddEntityFrameworkStores<IdentityServerDbContext>()
                             .AddDefaultTokenProviders();
 
             // AddIdentityServer
+
+            var clients = builder.Configuration.GetSection("IdentityServer:Clients").Get<List<ClientConfig>>();
+
+            var apiScopes = builder.Configuration.GetSection("IdentityServer:ApiScopes").Get<List<ApiScopeConfig>>();
+
+            var roles = builder.Configuration.GetSection("IdentityServer:Roles").Get<List<string>>();
+
             var identity = builder.Services.AddIdentityServer(options =>
             {
+                options.IssuerUri = builder.Configuration["IdentityServer:IssuerUri"];
                 options.Events.RaiseErrorEvents = true;
                 options.Events.RaiseInformationEvents = true;
                 options.Events.RaiseFailureEvents = true;
                 options.Events.RaiseSuccessEvents = true;
                 options.EmitStaticAudienceClaim = true;
-            })
-                .AddInMemoryIdentityResources(SD.IdentityResources)
-                .AddInMemoryApiScopes(SD.ApiScopes)
-                .AddInMemoryClients(SD.Clients)
-                .AddAspNetIdentity<ApplicationUser>();
+            }).AddInMemoryClients(clients.Select(client => new Client
+            {
+                ClientId = client.ClientId,
+                ClientSecrets = client.ClientSecrets.Select(secret => new Secret(secret.Value.Sha256())).ToList(),
+                AllowedGrantTypes = client.AllowedGrantTypes,
+                AllowedScopes = client.AllowedScopes,
+                RedirectUris = client.RedirectUris,
+                PostLogoutRedirectUris = client.PostLogoutRedirectUris
+            }).ToList())
 
-            identity.AddDeveloperSigningCredential();
+
+            .AddInMemoryApiScopes(
+                apiScopes.Select(scope => new ApiScope(scope.Name, scope.DisplayName)).ToList())
+            .AddInMemoryIdentityResources(new List<IdentityResource>
+                 {
+                    new IdentityResources.OpenId(),
+                    new IdentityResources.Profile(),
+                    new IdentityResources.Email(),
+                    new IdentityResource("role", "User roles", roles)
+
+                 })
+            .AddProfileService<CustomProfileService>()
+            .AddDeveloperSigningCredential() // For Development
+            .AddAspNetIdentity<ApplicationUser>();
+
+
+
 
             var app = builder.Build();
 

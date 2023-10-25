@@ -38,11 +38,13 @@ namespace Matgr.Identity
 
             // AddIdentityServer
 
-            var clients = builder.Configuration.GetSection("IdentityServer:Clients").Get<List<ClientConfig>>();
+            var clients = builder.Configuration.GetSection("IdentityServer:Clients");
 
-            var apiScopes = builder.Configuration.GetSection("IdentityServer:ApiScopes").Get<List<ApiScopeConfig>>();
+            var apiScopes = builder.Configuration.GetSection("IdentityServer:ApiScopes");
 
-            var roles = builder.Configuration.GetSection("IdentityServer:Roles").Get<List<string>>();
+            var roles = builder.Configuration.GetSection("IdentityServer:Roles");
+            var identityResources = builder.Configuration.GetSection("IdentityServer:IdentityResources");
+
 
             var identity = builder.Services.AddIdentityServer(options =>
             {
@@ -52,30 +54,13 @@ namespace Matgr.Identity
                 options.Events.RaiseFailureEvents = true;
                 options.Events.RaiseSuccessEvents = true;
                 options.EmitStaticAudienceClaim = true;
-            }).AddInMemoryClients(clients.Select(client => new Client
-            {
-                ClientId = client.ClientId,
-                ClientSecrets = client.ClientSecrets.Select(secret => new Secret(secret.Value.Sha256())).ToList(),
-                AllowedGrantTypes = client.AllowedGrantTypes,
-                AllowedScopes = client.AllowedScopes,
-                RedirectUris = client.RedirectUris,
-                PostLogoutRedirectUris = client.PostLogoutRedirectUris
-            }).ToList())
+            }).AddInMemoryClients(clients)
 
-
-            .AddInMemoryApiScopes(
-                apiScopes.Select(scope => new ApiScope(scope.Name, scope.DisplayName)).ToList())
-            .AddInMemoryIdentityResources(new List<IdentityResource>
-                 {
-                    new IdentityResources.OpenId(),
-                    new IdentityResources.Profile(),
-                    new IdentityResources.Email(),
-                    new IdentityResource("role", "User roles", roles)
-
-                 })
+            .AddInMemoryApiScopes(apiScopes)
+            .AddInMemoryIdentityResources(identityResources)
             .AddProfileService<CustomProfileService>()
-            .AddDeveloperSigningCredential() // For Development
-            .AddAspNetIdentity<ApplicationUser>();
+            .AddAspNetIdentity<ApplicationUser>()
+            .AddDeveloperSigningCredential(); // For Development
 
 
 
@@ -96,6 +81,7 @@ namespace Matgr.Identity
             app.UseRouting();
 
             app.UseIdentityServer();
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

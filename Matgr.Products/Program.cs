@@ -1,9 +1,12 @@
 using Matgr.Products.Application.Mappers;
 using Matgr.Products.Helper.ConfigureServices;
 using Matgr.Products.Infrastructure.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+
 
 namespace Matgr.Products
 {
@@ -17,71 +20,107 @@ namespace Matgr.Products
             // Add Product RegisterServices
             builder.Services.AddProductRegisterServices(builder.Configuration);
 
-            // Add services to the container.
-            builder.Services.AddAuthorization();
+
             builder.Services.AddControllers();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
 
+
             builder.Services.AddAuthentication("Bearer")
-                    .AddJwtBearer("Bearer", opt =>
-                    {
-                        opt.Authority = builder.Configuration["APIUrls:IdentityServer"];
-                        opt.TokenValidationParameters = new TokenValidationParameters
-                        {
-                            ValidateAudience = false
-                        };
-                    });
-
-            builder.Services.AddAuthorization(opt =>
-            {
-                opt.AddPolicy("ApiScope", policy =>
+                .AddJwtBearer("Bearer", options =>
                 {
-                    policy.RequireAuthenticatedUser();
-                    policy.RequireClaim("scope", "matgr");
-                });
-            });
+                    options.Authority = builder.Configuration["IdentityServer:Authority"];
+                    options.Audience = builder.Configuration["IdentityServer:ApiScope"];
 
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = false
+                    };
+                });
+            
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ProductsScope", policy => policy.RequireClaim("scope", "Matgr.Products.API"));
+                //options.AddPolicy("ReadScope", policy => policy.RequireClaim("scope", "read"));
+                //options.AddPolicy("WriteScope", policy => policy.RequireClaim("scope", "write"));
+                options.AddPolicy("AdminRole", policy => policy.RequireClaim("role", "Admin"));
+                options.AddPolicy("CustomerRole", policy => policy.RequireClaim("role", "Customer"));
+
+            });
 
             builder.Services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo() { Title = "Matgr.ProductsAPI" });
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Matgr.Products API", Version = "v1" });
+
+                c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
                 {
-                    Description = @"Enter 'Bearer' [space] and your token",
-                    Name = "Authorization",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer"
+                    Type = SecuritySchemeType.OAuth2,
+                    Flows = new OpenApiOAuthFlows
+                    {
+
+                        AuthorizationCode = new OpenApiOAuthFlow
+                        {
+                            AuthorizationUrl = new Uri($"{builder.Configuration["IdentityServer:Authority"]}/connect/authorize"),
+                            TokenUrl = new Uri($"{builder.Configuration["IdentityServer:Authority"]}/connect/token"),
+                            Scopes = new Dictionary<string, string>
+                    {
+                        { "Matgr.Products.API", "Matgr Products API" }
+                    }
+                        }
+                    }
                 });
 
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement{
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                    {
                         {
                             new OpenApiSecurityScheme
                             {
-                                Reference = new OpenApiReference
-                                {
-                                    Type= ReferenceType.SecurityScheme,
-                                    Id= "Beaer"
-                                },
-                                Scheme="outh2",
-                                Name="Bearer",
-                                In = ParameterLocation.Header
+                                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
                             },
-                            new List<string>()
-                            }
-                        });
+                            new[] { "Matgr.Products.API" }
+                        }});
             });
 
-            builder.Services.AddAuthorization(opt =>
-            {
-                opt.AddPolicy("ApiScope", policy =>
-                {
-                    policy.RequireAuthenticatedUser();
-                    policy.RequireClaim("scope", "matgr");
-                });
-            });
+
+            //builder.Services.AddSwaggerGen(c =>
+            //{
+            //    c.SwaggerDoc("v1", new OpenApiInfo() { Title = "Matgr.ProductsAPI" });
+            //    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            //    {
+            //        Description = @"Enter 'Bearer' [space] and your token",
+            //        Name = "Authorization",
+            //        In = ParameterLocation.Header,
+            //        Type = SecuritySchemeType.ApiKey,
+            //        Scheme = "Bearer"
+            //    });
+
+            //    c.AddSecurityRequirement(new OpenApiSecurityRequirement{
+            //            {
+            //                new OpenApiSecurityScheme
+            //                {
+            //                    Reference = new OpenApiReference
+            //                    {
+            //                        Type= ReferenceType.SecurityScheme,
+            //                        Id= "Beaer"
+            //                    },
+            //                    Scheme="outh2",
+            //                    Name="Bearer",
+            //                    In = ParameterLocation.Header
+            //                },
+            //                new List<string>()
+            //                }
+            //            });
+            //});
+
+            //builder.Services.AddAuthorization(opt =>
+            //{
+            //    opt.AddPolicy("ApiScope", policy =>
+            //    {
+            //        policy.RequireAuthenticatedUser();
+            //        policy.RequireClaim("scope", "matgr");
+            //    });
+            //});
 
             var app = builder.Build();
 
@@ -89,7 +128,14 @@ namespace Matgr.Products
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Matgr.Products API V1");
+                    c.OAuthClientId(builder.Configuration["IdentityServer:ClientId"]);
+                    c.OAuthClientSecret(builder.Configuration["IdentityServer:ClientSecret"]);
+                    c.OAuthUsePkce();
+                });
             }
 
             app.UseHttpsRedirection();

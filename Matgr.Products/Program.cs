@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
+using Microsoft.Extensions.Configuration;
+using Duende.IdentityServer.Models;
 
 namespace Matgr.Products
 {
@@ -27,18 +28,28 @@ namespace Matgr.Products
             builder.Services.AddEndpointsApiExplorer();
 
 
-            builder.Services.AddAuthentication("Bearer")
-                .AddJwtBearer("Bearer", options =>
-                {
-                    options.Authority = builder.Configuration["IdentityServer:Authority"];
-                    options.Audience = builder.Configuration["IdentityServer:ApiScope"];
+            var identityServerConfig =builder.Configuration.GetSection("IdentityServer");
 
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateAudience = false
-                    };
-                });
-            
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = "Bearer";
+                options.DefaultChallengeScheme = "oidc";
+            })
+            .AddJwtBearer("Bearer", options =>
+            {
+                options.Authority = identityServerConfig["Authority"];
+                options.Audience = identityServerConfig["ApiScope"];
+            })
+            .AddOpenIdConnect("oidc", options =>
+            {
+                options.Authority = identityServerConfig["Authority"];
+                options.ClientId = identityServerConfig["ClientId"];
+                options.ClientSecret = identityServerConfig["ClientSecret"].Sha256();
+                options.ResponseType = "code";
+                options.SaveTokens = true;
+                options.GetClaimsFromUserInfoEndpoint = true;
+            });
+
             builder.Services.AddAuthorization(options =>
             {
                 options.AddPolicy("ProductsScope", policy => policy.RequireClaim("scope", "Matgr.Products.API"));

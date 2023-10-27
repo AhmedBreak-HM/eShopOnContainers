@@ -22,6 +22,13 @@ namespace Matgr.Identity
             builder.Services.AddRazorPages();
             builder.Services.AddCors();
 
+            // AddIdentityServer
+
+            var clients = builder.Configuration.GetSection("IdentityServer:Clients").Get<List<ClientConfig>>();
+
+            var apiScopes = builder.Configuration.GetSection("IdentityServer:ApiScopes").Get<List<ApiScopeConfig>>();
+
+            var roles = builder.Configuration.GetSection("IdentityServer:Roles").Get<List<string>>();
             builder.Services.AddTransient<IProfileService, CustomProfileService>();
 
 
@@ -39,11 +46,11 @@ namespace Matgr.Identity
 
             // AddIdentityServer
 
-            var clients = builder.Configuration.GetSection("IdentityServer:Clients");
+            //var clients = builder.Configuration.GetSection("IdentityServer:Clients");
 
-            var apiScopes = builder.Configuration.GetSection("IdentityServer:ApiScopes");
+            //var apiScopes = builder.Configuration.GetSection("IdentityServer:ApiScopes");
 
-            var roles = builder.Configuration.GetSection("IdentityServer:Roles");
+            //var roles = builder.Configuration.GetSection("IdentityServer:Roles");
             var identityResources = builder.Configuration.GetSection("IdentityServer:IdentityResources");
 
 
@@ -55,9 +62,23 @@ namespace Matgr.Identity
                 options.Events.RaiseFailureEvents = true;
                 options.Events.RaiseSuccessEvents = true;
                 options.EmitStaticAudienceClaim = true;
-            }).AddInMemoryClients(clients)
+            }).AddInMemoryClients(clients.Select(client => new Client
+            {
+                ClientId = client.ClientId,
+                ClientSecrets = client.ClientSecrets.Select(secret => new Secret(secret.Value.Sha256())).ToList(),
+                AllowedGrantTypes = client.AllowedGrantTypes,
+                AllowedScopes = client.AllowedScopes,
+                RedirectUris = client.RedirectUris,
+                PostLogoutRedirectUris = client.PostLogoutRedirectUris
+            }).ToList())
 
-            .AddInMemoryApiScopes(apiScopes)
+
+            .AddInMemoryApiScopes(
+                apiScopes.Select(scope => new ApiScope(scope.Name, scope.DisplayName)).ToList())
+ 
+            //.AddInMemoryClients(clients)
+
+            //.AddInMemoryApiScopes(apiScopes)
             .AddInMemoryIdentityResources(identityResources)
             .AddProfileService<CustomProfileService>()
             .AddAspNetIdentity<ApplicationUser>()

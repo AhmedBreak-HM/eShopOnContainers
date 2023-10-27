@@ -44,7 +44,7 @@ namespace Matgr.Products
             {
                 options.Authority = identityServerConfig["Authority"];
                 options.ClientId = identityServerConfig["ClientId"];
-                options.ClientSecret = identityServerConfig["ClientSecret"].Sha256();
+                options.ClientSecret = identityServerConfig["ClientSecret"];
                 options.ResponseType = "code";
                 options.SaveTokens = true;
                 options.GetClaimsFromUserInfoEndpoint = true;

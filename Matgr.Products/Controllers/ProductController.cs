@@ -2,6 +2,7 @@
 using Matgr.Products.Application.Responses;
 using Matgr.Products.Core.Entities;
 using Matgr.Products.Core.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -21,7 +22,6 @@ namespace Matgr.Products.Controllers
             _repository = repository;
 
         }
-
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetListAsync()
         {

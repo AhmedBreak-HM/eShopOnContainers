@@ -8,6 +8,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Configuration;
 using Duende.IdentityServer.Models;
+using System.Net;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 
 namespace Matgr.Products
 {
@@ -21,6 +23,7 @@ namespace Matgr.Products
             // Add Product RegisterServices
             builder.Services.AddProductRegisterServices(builder.Configuration);
 
+            builder.Services.AddCors();
 
             builder.Services.AddControllers();
 
@@ -34,7 +37,8 @@ namespace Matgr.Products
             {
                 options.DefaultScheme = "Bearer";
                 options.DefaultChallengeScheme = "oidc";
-            })
+            }).AddCookie("Cookies")
+
             .AddJwtBearer("Bearer", options =>
             {
                 options.Authority = identityServerConfig["Authority"];
@@ -44,10 +48,24 @@ namespace Matgr.Products
             {
                 options.Authority = identityServerConfig["Authority"];
                 options.ClientId = identityServerConfig["ClientId"];
-                options.ClientSecret = identityServerConfig["ClientSecret"];
+                options.ClientSecret = identityServerConfig["ClientSecret"].Sha256();
                 options.ResponseType = "code";
                 options.SaveTokens = true;
                 options.GetClaimsFromUserInfoEndpoint = true;
+                options.Scope.Clear();
+                options.Scope.Add("Matgr.Products.API");
+                options.Scope.Add("openid");
+                options.Scope.Add("profile");
+                options.Scope.Add("email");
+                options.Scope.Add("role");
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    NameClaimType = "name",
+                    RoleClaimType = "role"
+                };
+                options.ClaimActions.MapUniqueJsonKey("website", "website");
+
+
             });
 
             builder.Services.AddAuthorization(options =>
@@ -94,44 +112,7 @@ namespace Matgr.Products
             });
 
 
-            //builder.Services.AddSwaggerGen(c =>
-            //{
-            //    c.SwaggerDoc("v1", new OpenApiInfo() { Title = "Matgr.ProductsAPI" });
-            //    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            //    {
-            //        Description = @"Enter 'Bearer' [space] and your token",
-            //        Name = "Authorization",
-            //        In = ParameterLocation.Header,
-            //        Type = SecuritySchemeType.ApiKey,
-            //        Scheme = "Bearer"
-            //    });
-
-            //    c.AddSecurityRequirement(new OpenApiSecurityRequirement{
-            //            {
-            //                new OpenApiSecurityScheme
-            //                {
-            //                    Reference = new OpenApiReference
-            //                    {
-            //                        Type= ReferenceType.SecurityScheme,
-            //                        Id= "Beaer"
-            //                    },
-            //                    Scheme="outh2",
-            //                    Name="Bearer",
-            //                    In = ParameterLocation.Header
-            //                },
-            //                new List<string>()
-            //                }
-            //            });
-            //});
-
-            //builder.Services.AddAuthorization(opt =>
-            //{
-            //    opt.AddPolicy("ApiScope", policy =>
-            //    {
-            //        policy.RequireAuthenticatedUser();
-            //        policy.RequireClaim("scope", "matgr");
-            //    });
-            //});
+           
 
             var app = builder.Build();
 
@@ -148,6 +129,12 @@ namespace Matgr.Products
                     c.OAuthUsePkce();
                 });
             }
+            app.UseCors(c =>
+            {
+                c.AllowAnyOrigin();
+                c.AllowAnyHeader();
+                c.AllowAnyMethod();
+            });
 
             app.UseHttpsRedirection();
 

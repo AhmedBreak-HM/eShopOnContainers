@@ -1,5 +1,5 @@
 @page
-@model Identity_Demo.Pages.Diagnostics.Index
+@model IdentityDemo.Pages.Diagnostics.Index
 
 <div class="diagnostics-page">
     <div class="lead">
@@ -54,6 +54,21 @@
                             </dd>
                         }
                     </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Roles</h2>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        @foreach (var role in Model.View.Roles)
+                        {
+                            <li>@role</li>
+                        }
+                    </ul>
                 </div>
             </div>
         </div>

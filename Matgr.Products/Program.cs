@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Duende.IdentityServer.Models;
 using System.Net;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using IdentityModel.Client;
+using Duende.IdentityServer.AspNetIdentity;
 
 namespace Matgr.Products
 {
@@ -22,6 +24,7 @@ namespace Matgr.Products
 
             // Add Product RegisterServices
             builder.Services.AddProductRegisterServices(builder.Configuration);
+            builder.Services.AddHttpClient<IHttpClientFactory>();
 
             builder.Services.AddCors();
 
@@ -30,89 +33,57 @@ namespace Matgr.Products
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
 
+            builder.Services.AddAuthentication("Bearer")
+                    .AddJwtBearer("Bearer", opt =>
+                    {
+                        opt.Authority = "https://localhost:7146/";
+                        opt.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateAudience = false
 
-            var identityServerConfig =builder.Configuration.GetSection("IdentityServer");
-
-            builder.Services.AddAuthentication(options =>
+                        };
+                    });
+            builder.Services.AddAuthorization(opt =>
             {
-                options.DefaultScheme = "Bearer";
-                options.DefaultChallengeScheme = "oidc";
-            }).AddCookie("Cookies")
-
-            .AddJwtBearer("Bearer", options =>
-            {
-                options.Authority = identityServerConfig["Authority"];
-                options.Audience = identityServerConfig["ApiScope"];
-            })
-            .AddOpenIdConnect("oidc", options =>
-            {
-                options.Authority = identityServerConfig["Authority"];
-                options.ClientId = identityServerConfig["ClientId"];
-                options.ClientSecret = identityServerConfig["ClientSecret"].Sha256();
-                options.ResponseType = "code";
-                options.SaveTokens = true;
-                options.GetClaimsFromUserInfoEndpoint = true;
-                options.Scope.Clear();
-                options.Scope.Add("Matgr.Products.API");
-                options.Scope.Add("openid");
-                options.Scope.Add("profile");
-                options.Scope.Add("email");
-                options.Scope.Add("role");
-                options.TokenValidationParameters = new TokenValidationParameters
+                opt.AddPolicy("ApiScope", policy =>
                 {
-                    NameClaimType = "name",
-                    RoleClaimType = "role"
-                };
-                options.ClaimActions.MapUniqueJsonKey("website", "website");
-
-
-            });
-
-            builder.Services.AddAuthorization(options =>
-            {
-                options.AddPolicy("ProductsScope", policy => policy.RequireClaim("scope", "Matgr.Products.API"));
-                //options.AddPolicy("ReadScope", policy => policy.RequireClaim("scope", "read"));
-                //options.AddPolicy("WriteScope", policy => policy.RequireClaim("scope", "write"));
-                options.AddPolicy("AdminRole", policy => policy.RequireClaim("role", "Admin"));
-                options.AddPolicy("CustomerRole", policy => policy.RequireClaim("role", "Customer"));
-
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("scope", "matgr");
+                });
             });
 
             builder.Services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Matgr.Products API", Version = "v1" });
 
-                c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+                c.SwaggerDoc("v1", new OpenApiInfo() { Title = "Matgr.ProductsAPI" });
+
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Type = SecuritySchemeType.OAuth2,
-                    Flows = new OpenApiOAuthFlows
-                    {
-
-                        AuthorizationCode = new OpenApiOAuthFlow
-                        {
-                            AuthorizationUrl = new Uri($"{builder.Configuration["IdentityServer:Authority"]}/connect/authorize"),
-                            TokenUrl = new Uri($"{builder.Configuration["IdentityServer:Authority"]}/connect/token"),
-                            Scopes = new Dictionary<string, string>
-                    {
-                        { "Matgr.Products.API", "Matgr Products API" }
-                    }
-                        }
-                    }
+                    Description = @"Enter 'Bearer' [space] and your token",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
                 });
-
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement{
+                {
+                    new OpenApiSecurityScheme
                     {
+                        Reference = new OpenApiReference
                         {
-                            new OpenApiSecurityScheme
-                            {
-                                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
-                            },
-                            new[] { "Matgr.Products.API" }
-                        }});
+                            Type= ReferenceType.SecurityScheme,
+                            Id= "Bearer"
+                        },
+                        Scheme="outh2",
+                        Name="Bearer",
+                        In = ParameterLocation.Header
+                    },
+                    new List<string>()
+                }});
             });
 
 
-           
+
 
             var app = builder.Build();
 
@@ -123,10 +94,10 @@ namespace Matgr.Products
 
                 app.UseSwaggerUI(c =>
                 {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Matgr.Products API V1");
-                    c.OAuthClientId(builder.Configuration["IdentityServer:ClientId"]);
-                    c.OAuthClientSecret(builder.Configuration["IdentityServer:ClientSecret"]);
-                    c.OAuthUsePkce();
+                    //c.SwaggerEndpoint("/swagger/v1/swagger.json", "Matgr.Products API V1");
+                    //c.OAuthClientId(builder.Configuration["IdentityServer:ClientId"]);
+                    //c.OAuthClientSecret(builder.Configuration["IdentityServer:ClientSecret"]);
+                    //c.OAuthUsePkce();
                 });
             }
             app.UseCors(c =>
@@ -143,12 +114,12 @@ namespace Matgr.Products
             app.UseAuthentication();
 
             app.UseAuthorization();
+            //app.UseIdentityServer();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
-
 
 
             app.Run();

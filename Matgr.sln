@@ -21,11 +21,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Matgr.Payments", "Matgr.Pay
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{B378E57D-B892-4667-96EC-E592ED924A9E}"
 EndProject
-Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "Matgr.UI", "Matgr.UI\Matgr.UI.esproj", "{5EC6C979-F8AD-4942-A124-C6C5189D2942}"
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "Matgr.Agular.UI", "Matgr.UI\Matgr.Agular.UI.esproj", "{5EC6C979-F8AD-4942-A124-C6C5189D2942}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PostmanCollection", "PostmanCollection", "{A2214CF7-5893-460B-9E78-B92B9A842DBA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Matgr.Identity", "Matgr.Identity\Matgr.Identity.csproj", "{A113E383-5F6A-4AAE-90EE-F420BCB11FCC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Matgr.Identity", "Matgr.Identity\Matgr.Identity.csproj", "{A113E383-5F6A-4AAE-90EE-F420BCB11FCC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

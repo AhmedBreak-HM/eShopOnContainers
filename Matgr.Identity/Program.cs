@@ -1,6 +1,7 @@
+using Duende.IdentityServer.AspNetIdentity;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
-using Identity_Demo;
+using IdentityModel.Client;
 using Matgr.Identity.Data;
 using Matgr.Identity.Entities;
 using Matgr.Identity.IdentityConfig;
@@ -22,15 +23,7 @@ namespace Matgr.Identity
             builder.Services.AddRazorPages();
             builder.Services.AddCors();
 
-            // AddIdentityServer
-
-            var clients = builder.Configuration.GetSection("IdentityServer:Clients").Get<List<ClientConfig>>();
-
-            var apiScopes = builder.Configuration.GetSection("IdentityServer:ApiScopes").Get<List<ApiScopeConfig>>();
-
-            var roles = builder.Configuration.GetSection("IdentityServer:Roles").Get<List<string>>();
-            builder.Services.AddTransient<IProfileService, CustomProfileService>();
-
+            builder.Services.AddTransient<IProfileService, ProfileService>();
 
             // Add DbContext
             var connectionString = builder.Configuration.GetConnectionString("IdentityServerDbConnection");
@@ -44,58 +37,35 @@ namespace Matgr.Identity
                             .AddEntityFrameworkStores<IdentityServerDbContext>()
                             .AddDefaultTokenProviders();
 
-            // AddIdentityServer
-
-            //var clients = builder.Configuration.GetSection("IdentityServer:Clients");
-
-            //var apiScopes = builder.Configuration.GetSection("IdentityServer:ApiScopes");
-
-            //var roles = builder.Configuration.GetSection("IdentityServer:Roles");
-            var identityResources = builder.Configuration.GetSection("IdentityServer:IdentityResources");
-
-
             var identity = builder.Services.AddIdentityServer(options =>
             {
-                options.IssuerUri = builder.Configuration["IdentityServer:IssuerUri"];
                 options.Events.RaiseErrorEvents = true;
                 options.Events.RaiseInformationEvents = true;
                 options.Events.RaiseFailureEvents = true;
                 options.Events.RaiseSuccessEvents = true;
                 options.EmitStaticAudienceClaim = true;
-            }).AddInMemoryClients(clients.Select(client => new Client
-            {
-                ClientId = client.ClientId,
-                ClientSecrets = client.ClientSecrets.Select(secret => new Secret(secret.Value.Sha256())).ToList(),
-                AllowedGrantTypes = client.AllowedGrantTypes,
-                AllowedScopes = client.AllowedScopes,
-                RedirectUris = client.RedirectUris,
-                PostLogoutRedirectUris = client.PostLogoutRedirectUris
-            }).ToList())
-
-
-            .AddInMemoryApiScopes(
-                apiScopes.Select(scope => new ApiScope(scope.Name, scope.DisplayName)).ToList())
- 
-            //.AddInMemoryClients(clients)
-
-            //.AddInMemoryApiScopes(apiScopes)
-            .AddInMemoryIdentityResources(identityResources)
-            .AddProfileService<CustomProfileService>()
+            })
+            .AddInMemoryIdentityResources(SD.IdentityResources)
+            .AddInMemoryApiScopes(SD.ApiScopes)
+            .AddInMemoryClients(SD.Clients)
             .AddAspNetIdentity<ApplicationUser>()
-            .AddDeveloperSigningCredential(); // For Development
+            .AddProfileService<ProfileService>();
+
+            identity.AddProfileService<ProfileService>();
+            identity.AddDeveloperSigningCredential();
+
 
 
 
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
             app.UseCors(builder => builder
                     .AllowAnyOrigin()
                     .AllowAnyMethod()
@@ -106,8 +76,8 @@ namespace Matgr.Identity
 
             app.UseRouting();
 
-            app.UseIdentityServer();
             app.UseAuthentication();
+            app.UseIdentityServer();
 
             app.UseAuthorization();
 
@@ -118,9 +88,13 @@ namespace Matgr.Identity
             //    DbInitializer.Initialize(userManager, roleManager);
             //}
 
+
             app.MapRazorPages();
 
+
             app.Run();
+
+
         }
     }
 }

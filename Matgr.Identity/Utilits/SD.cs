@@ -13,12 +13,15 @@ namespace Matgr.Identity.Utilits
             {
                 new IdentityResources.OpenId(),
                 new IdentityResources.Email(),
-                new IdentityResources.Profile()
+                new IdentityResources.Profile(),
+                new IdentityResource("role", new[] { "role" })
     };
         public static IEnumerable<ApiScope> ApiScopes =>
             new List<ApiScope>()
             {
+                new ApiScope("client","Matgr Server"),
                 new ApiScope("matgr","Matgr Server"),
+
                 new ApiScope(name:"read", displayName: "Read your data."),
                 new ApiScope(name: "write", displayName: "Write your data"),
                 new ApiScope(name:"delete", displayName: "Delete your data")
@@ -32,23 +35,40 @@ namespace Matgr.Identity.Utilits
                    ClientId="client",
                     ClientSecrets= { new Secret("secret".Sha256())},
                     AllowedGrantTypes = GrantTypes.ClientCredentials,
-                    AllowedScopes={ "read", "write","profile"}
+
+                    AlwaysIncludeUserClaimsInIdToken = true,
+
+
+                    AllowedScopes = new List<string>
+                    {
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile,
+                         IdentityServerConstants.StandardScopes.Email,
+                         "client",
+                         "role"
+                    }
+
                 },
                  new Client
                 {
                     ClientId = "matgr",
                     ClientSecrets= { new Secret("secret".Sha256())},
                     AllowedGrantTypes = GrantTypes.Code,
-                    RedirectUris = { "https://localhost:7146/signin-oidc" },
-                    PostLogoutRedirectUris={ "https://localhost:7146/signout-callback-oidc" },
+
+                   AlwaysIncludeUserClaimsInIdToken = true,
+
+                    RedirectUris = { "https://localhost:44350/signin-oidc" },
+                    PostLogoutRedirectUris={ "https://localhost:44350/signout-callback-oidc" },
                     AllowedScopes = new List<string>
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
                          IdentityServerConstants.StandardScopes.Email,
-                         "matgr"
+                         "matgr",
+                         "role"
                     }
                 }
+
             };
     }
 }

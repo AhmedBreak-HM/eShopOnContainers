@@ -9,6 +9,7 @@ using System;
 
 namespace Matgr.Products.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class ProductController : ControllerBase

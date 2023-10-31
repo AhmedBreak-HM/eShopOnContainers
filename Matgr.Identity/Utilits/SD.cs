@@ -57,8 +57,8 @@ namespace Matgr.Identity.Utilits
 
                    AlwaysIncludeUserClaimsInIdToken = true,
 
-                    RedirectUris = { "https://localhost:44350/signin-oidc" },
-                    PostLogoutRedirectUris={ "https://localhost:44350/signout-callback-oidc" },
+                    RedirectUris = { "https://localhost:7187/signin-oidc" },
+                    PostLogoutRedirectUris={ "https://localhost:7187/signout-callback-oidc" },
                     AllowedScopes = new List<string>
                     {
                         IdentityServerConstants.StandardScopes.OpenId,

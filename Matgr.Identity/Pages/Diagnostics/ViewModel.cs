@@ -34,7 +34,6 @@ public class ViewModel
                .Where(c => c.Type == ClaimTypes.Role)
                .Select(c => c.Value)
                .ToList();
-        Console.WriteLine("hfhfh");
 
     }
 

@@ -5,6 +5,7 @@ using Duende.IdentityServer.Services;
 using IdentityModel;
 using Matgr.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
+using System.Linq;
 using System.Security.Claims;
 
 namespace Matgr.Identity.Services
@@ -29,8 +30,8 @@ namespace Matgr.Identity.Services
             var user = await _userManager.FindByIdAsync(sub);
 
             List<Claim> claims = new();
-            //claims = claims.Where(claim => context.RequestedClaimTypes
-            //.Contains(claim.Type)).ToList();
+            claims = claims.Where(claim => context.RequestedClaimTypes
+            .Contains(claim.Type)).ToList();
 
             claims.Add(new Claim(JwtClaimTypes.Name, user.UserName));
             claims.Add(new Claim(JwtClaimTypes.FamilyName, user.LastName));
